@@ -3,6 +3,7 @@ package com.swoovo.users.service;
 import com.swoovo.users.dto.UserRequest;
 import com.swoovo.users.dto.UserResponse;
 import com.swoovo.users.entity.UserEntity;
+import com.swoovo.users.exception.FileStorageException;
 import com.swoovo.users.mapper.UserMapper;
 import com.swoovo.users.repository.UserEntityRepository;
 import jakarta.persistence.EntityExistsException;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -29,7 +32,8 @@ public class UserService {
             @CacheEvict(value = "users", allEntries = true),
             @CacheEvict(value = "user", allEntries = true)
     })
-    public UserResponse createUser(UserRequest userRequest) throws Exception {
+    public UserResponse createUser(UserRequest userRequest) throws IOException, FileStorageException,
+            EntityExistsException {
         if (userEntityRepository.findByNameAndSurname(userRequest.name(),
                 userRequest.surname()).isPresent()
                 || userEntityRepository.findByEmail(userRequest.email())
@@ -49,7 +53,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     @Cacheable(value = "user")
-    public UserResponse findUserById(long id) throws Exception {
+    public UserResponse findUserById(long id) throws FileStorageException {
         return getUserResponse(findUserEntityById(id));
     }
 
@@ -65,7 +69,7 @@ public class UserService {
             @CacheEvict(value = "users", allEntries = true),
             @CacheEvict(value = "user", key = "#id")
     })
-    public UserResponse updateUser(long id, UserRequest userRequest) throws Exception {
+    public UserResponse updateUser(long id, UserRequest userRequest) throws FileStorageException {
         UserEntity userEntity = findUserEntityById(id);
 
         userMapper.updateUserFromRequest(userRequest, userEntity);
@@ -86,7 +90,7 @@ public class UserService {
         userEntityRepository.deleteById(id);
     }
 
-    private UserResponse getUserResponse(UserEntity userEntity) throws Exception {
+    private UserResponse getUserResponse(UserEntity userEntity) throws FileStorageException {
         UserResponse userResponse = userMapper.toResponse(userEntity);
 
         userResponse.setAvatarUrl(minioService.downloadFile(userEntity.getAvatarFilePath()));
