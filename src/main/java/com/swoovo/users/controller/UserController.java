@@ -3,7 +3,6 @@ package com.swoovo.users.controller;
 import com.swoovo.users.dto.UserRequest;
 import com.swoovo.users.dto.UserResponse;
 import com.swoovo.users.service.UserService;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -11,11 +10,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.PagedModel;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.io.IOException;
 import java.net.URI;
 
 @RestController
@@ -24,8 +23,10 @@ import java.net.URI;
 public class UserController {
     private final UserService userService;
 
-    @PostMapping
-    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRequest userRequest)
+    @PostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<UserResponse> registerUser(@Valid @ModelAttribute UserRequest userRequest)
             throws Exception {
         UserResponse userResponse = userService.createUser(userRequest);
 
